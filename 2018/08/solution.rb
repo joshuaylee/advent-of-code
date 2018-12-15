@@ -1,4 +1,16 @@
-Node = Struct.new(:children, :metadata)
+Node = Struct.new(:children, :metadata) do
+  def value
+    @value ||= \
+      if children.empty?
+        metadata.reduce(:+)
+      else
+        metadata.reduce(0) do |sum, child_index|
+          child = children[child_index - 1]
+          sum + (child && child.value).to_i
+        end
+      end
+  end
+end
 
 class LicenseReader
   def initialize(file)
@@ -42,6 +54,11 @@ def bfs(root)
 end
 
 root = LicenseReader.new(File.open(ARGV[0])).read
+
+puts "## Part 1"
 sum_metadata = 0
 bfs(root) { |node| sum_metadata += node.metadata.reduce(:+) }
-puts sum_metadata
+puts "Answer = #{sum_metadata}"
+
+puts "\n## Part 2"
+puts "Answer = #{root.value}"
