@@ -20,14 +20,14 @@ def power_at(x, y, serial_number)
   power_level - 5
 end
 
-def find_max_power_3x3(grid)
+def find_max_power_nxn(grid, n)
   max_x = nil
   max_y = nil
   max_power = nil
 
-  (0...297).each do |x|
-    (0...297).each do |y|
-      cur_power = total_power_at(x, y, grid)
+  (0...(300-n)).each do |x|
+    (0...(300-n)).each do |y|
+      cur_power = total_power_at(x, y, n, grid)
       if max_power.nil? || cur_power > max_power
         max_x = x
         max_y = y
@@ -39,25 +39,20 @@ def find_max_power_3x3(grid)
   {
     x: max_x + 1,
     y: max_y + 1,
+    n: n,
     total_power: max_power
   }
 end
 
-def total_power_at(x, y, power)
-  power[x][y] +
-  power[x][y+1] +
-  power[x][y+2] +
-  power[x+1][y] +
-  power[x+1][y+1] +
-  power[x+1][y+2] +
-  power[x+2][y] +
-  power[x+2][y+1] +
-  power[x+2][y+2]
+def total_power_at(x, y, n, grid)
+  (0...n).reduce(0) do |memo, offset|
+    memo + grid[x + offset].slice(y, n).reduce(:+)
+  end
 end
 
 serial_number = ARGV[0].to_i
 grid = init_grid(serial_number)
-max_3x3 = find_max_power_3x3(grid)
-puts "For grid serial number #{serial_number}, the largest total 3x3 square has " \
+max_3x3 = find_max_power_nxn(grid, 3)
+puts "For grid serial number #{serial_number}, the largest total #{max_3x3[:n]}x#{max_3x3[:n]} square has " \
   "a top-left corner of #{max_3x3[:x]},#{max_3x3[:y]} " \
   "(with a total power of #{max_3x3[:total_power]})"
