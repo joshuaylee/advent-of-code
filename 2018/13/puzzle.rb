@@ -62,7 +62,6 @@ def handle_intersection(cart)
     :turn_left => :straight,
     :straight => :turn_right
   }[cart.prev_decision]
-  "+ --> #{cart.prev_decision}"
   send(cart.prev_decision, cart)
 end
 
@@ -81,23 +80,8 @@ def update_position(cart, track)
   when "\\", "/" then turn(cart, track_spot)
   when "+" then handle_intersection(cart)
   when "-", "|" then straight(cart)
-  else
-    p cart
-    p track[cart.y]
-    raise "bad spot"
+  else raise "bad spot #{cart.inspect}"
   end
-end
-
-def detect_collision(carts)
-  carts.each do |cart|
-    pos = [cart.x, cart.y]
-    if positions.include?(pos)
-      puts "Collision at #{cart.x}, #{cart.y}" if cart
-      return true
-    end
-    positions.add(pos)
-  end
-  false
 end
 
 def build_position_hash(carts)
@@ -118,24 +102,44 @@ def simulate(file_path, &on_collision)
   while keep_going
     position_hash = build_position_hash(carts)
     ordered_carts(carts).each do |cart|
+      position_hash.delete([cart.x, cart.y])
       update_position(cart, track)
       new_pos = [cart.x, cart.y]
+
       if position_hash.key?(new_pos)
-        keep_going = on_collision.call(new_pos, cart, position_hash)
+        keep_going = on_collision.call(new_pos, cart, position_hash, carts)
         break if !keep_going
       else
-        position_hash.delete(new_pos)
         position_hash[new_pos] = cart
       end
     end
+
+    break if carts.length < 2
   end
+
+  puts "Remaining Carts: "
+  puts carts.map { |c| "<#{c.x},#{c.y}>" }
 end
 
 def part1
-  simulate(ARGV[0]) do |collision_pos, cart, position_hash|
+  simulate(ARGV[0]) do |collision_pos, _cart, _position_hash, _carts|
     puts "Collision at #{collision_pos.inspect}"
     false
   end
 end
 
+def part2
+  simulate(ARGV[0]) do |collision_pos, cart, position_hash, carts|
+    other_cart = position_hash.delete(collision_pos)
+    carts.delete(cart)
+    carts.delete(other_cart)
+    puts "Collision at #{collision_pos.inspect}, #{carts.length} carts left"
+    true
+  end
+end
+
+puts "Part 1"
 part1
+
+puts "\nPart 2"
+part2
