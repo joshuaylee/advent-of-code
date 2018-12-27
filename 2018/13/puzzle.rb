@@ -93,13 +93,12 @@ def ordered_carts(carts)
   hash.keys.sort.map { |k| hash[k] }
 end
 
-def simulate(file_path, &on_collision)
+def simulate(file_path)
   input = read_input(ARGV[0])
   carts = get_carts(input)
   track = get_track(input)
 
-  keep_going = true
-  while keep_going
+  loop do
     position_hash = build_position_hash(carts)
     ordered_carts(carts).each do |cart|
       position_hash.delete([cart.x, cart.y])
@@ -107,8 +106,10 @@ def simulate(file_path, &on_collision)
       new_pos = [cart.x, cart.y]
 
       if position_hash.key?(new_pos)
-        keep_going = on_collision.call(new_pos, cart, position_hash, carts)
-        break if !keep_going
+        other_cart = position_hash.delete(new_pos)
+        carts.delete(cart)
+        carts.delete(other_cart)
+        puts "Collision at #{new_pos}, #{carts.length} carts left"
       else
         position_hash[new_pos] = cart
       end
@@ -121,25 +122,4 @@ def simulate(file_path, &on_collision)
   puts carts.map { |c| "<#{c.x},#{c.y}>" }
 end
 
-def part1
-  simulate(ARGV[0]) do |collision_pos, _cart, _position_hash, _carts|
-    puts "Collision at #{collision_pos.inspect}"
-    false
-  end
-end
-
-def part2
-  simulate(ARGV[0]) do |collision_pos, cart, position_hash, carts|
-    other_cart = position_hash.delete(collision_pos)
-    carts.delete(cart)
-    carts.delete(other_cart)
-    puts "Collision at #{collision_pos.inspect}, #{carts.length} carts left"
-    true
-  end
-end
-
-puts "Part 1"
-part1
-
-puts "\nPart 2"
-part2
+simulate(ARGV[0])
