@@ -3,9 +3,11 @@ require_relative 'unit'
 require_relative 'turn'
 
 class Battle
-  def initialize(file)
-    @board = BoardState.from_file(file)
-    @board.print
+  attr_reader :elf_power, :outcome
+
+  def initialize(file, elf_power=3)
+    @board = BoardState.from_file(file, elf_power)
+    @elf_power = elf_power
   end
 
   def combat
@@ -22,14 +24,11 @@ class Battle
       end
 
       break if !full_round
-
-      puts "After Round #{round}"
-      board.print
     end
 
-    outcome = (round - 1) * live_units.map(&:hp).reduce(:+)
-    puts "Outcome: #{outcome}"
-
+    hp_remaining = live_units.map(&:hp).reduce(:+)
+    outcome = (round - 1) * hp_remaining
+    puts "Outcome: #{round - 1 } x #{hp_remaining } = #{outcome}"
     puts "Remaining Units"
     live_units.each do |u|
       p u

@@ -1,14 +1,15 @@
 require_relative 'constants'
 
 class BoardState
-  def self.from_file(file)
+  def self.from_file(file, elf_power)
     rows = File.read(file).split("\n").map { |line| line.strip.chars }
 
     units = []
     rows.each_with_index do |row, y|
       row.each_with_index do |ch, x|
         next unless ch == GOBLIN || ch == ELF
-        unit = Unit.new(units.length, ch, 200, 3, x, y)
+        power = ch == GOBLIN ? 3 : elf_power
+        unit = Unit.new(units.length, ch, 200, power, x, y)
         rows[y][x] = unit
         units.push(unit)
       end
