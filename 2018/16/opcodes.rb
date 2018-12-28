@@ -1,3 +1,5 @@
+require 'set'
+
 def each_sample(file)
   e = File.open(file).each_line
   loop do
@@ -37,25 +39,25 @@ def op_procs
   }.freeze
 end
 
-def opcodes
+def op_names
   op_procs.keys
 end
 
-def do_op(opcode, registers, a, b, c=nil)
-  @op_procs[opcode].call(registers, a, b, c)
+def perform_op(op_name, a, b, c, registers)
+  @op_procs[op_name].call(registers, a, b, c)
 end
 
-def sample_acts_like_op?(opcode, reg_pre, instr, reg_expected)
+def sample_acts_like_op?(op_name, instr, reg_pre, reg_expected)
   regs = reg_pre.dup
-  do_op(opcode, regs, *instr.slice(1,3))
+  perform_op(op_name, *instr.slice(1,3), regs)
   regs == reg_expected
 end
 
 def part1
   num_samples = 0
   each_sample(ARGV[0]) do |reg_pre, instr, reg_post|
-    potential_ops = opcodes.count do |opcode|
-      sample_acts_like_op?(opcode, reg_pre, instr, reg_post)
+    potential_ops = op_names.count do |op_name|
+      sample_acts_like_op?(op_name, instr, reg_pre, reg_post)
     end
     num_samples += 1 if potential_ops >= 3
   end
@@ -63,5 +65,48 @@ def part1
   puts "#{num_samples} samples act like 3 or more ops"
 end
 
+def eliminate_mappings(map, opcode)
+  op_name = map[opcode].first
+  map.each_with_index do |potential_ops, opcode|
+    next if potential_ops.one?
+
+    potential_ops.delete(op_name)
+    eliminate_mappings(map, opcode) if potential_ops.one?
+  end
+end
+
+def map_opcodes(file)
+  map = op_names.count.times.map { op_names.to_set }
+
+  each_sample(ARGV[0]) do |reg_pre, instr, reg_post|
+    op_names.each do |op_name|
+      opcode = instr.first
+      next if sample_acts_like_op?(op_name, instr, reg_pre, reg_post)
+
+      map[opcode].delete(op_name)
+      eliminate_mappings(map, opcode) if map[opcode].one?
+    end
+  end
+
+  map.map(&:first)
+end
+
+def part2
+  opcodes = map_opcodes(ARGV[0])
+  puts "Mapped opcodes"
+  opcodes.each_with_index do |op_name, opcode|
+    puts "#{opcode}: #{op_name}"
+  end
+
+  regs = [0, 0, 0, 0]
+  File.open(ARGV[1]).each do |line|
+    instr = parse_instr(line.strip)
+    op_name = opcodes[instr[0]]
+    perform_op(op_name, *instr.slice(1,3), regs)
+  end
+  puts "After test program: #{regs.inspect}"
+end
+
 part1
+part2
 
