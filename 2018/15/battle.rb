@@ -21,7 +21,7 @@ class Battle
         turn.attack
       end
 
-      break if until_proc.call(full_round, live_units)
+      break if until_proc.call(full_round, board)
     end
 
     @hp_remaining = live_units.map(&:hp).reduce(:+)
@@ -29,6 +29,8 @@ class Battle
   end
 
   def print_outcome
+    board.print
+
     puts "Outcome: #{@round - 1 } x #{@hp_remaining } = #{@outcome}"
     puts "Remaining Units"
     live_units.each do |u|

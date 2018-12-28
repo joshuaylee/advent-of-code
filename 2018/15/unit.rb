@@ -1,3 +1,5 @@
+require_relative 'constants'
+
 Unit = Struct.new(:id, :type, :hp, :power, :x, :y) do
   def alive?
     hp > 0
@@ -9,5 +11,9 @@ Unit = Struct.new(:id, :type, :hp, :power, :x, :y) do
 
   def to_s
     type
+  end
+
+  def elf?
+    type == ELF
   end
 end
