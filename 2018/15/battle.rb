@@ -10,7 +10,7 @@ class Battle
     @elf_power = elf_power
   end
 
-  def combat
+  def combat(until_proc:)
     round = 0
     loop do
       round += 1
@@ -23,7 +23,7 @@ class Battle
         turn.attack
       end
 
-      break if !full_round
+      break if until_proc.call(full_round, board)
     end
 
     hp_remaining = live_units.map(&:hp).reduce(:+)
@@ -46,5 +46,3 @@ class Battle
       sort_by { |u| u.y * 1000 + u.x }
   end
 end
-
-Battle.new(ARGV[0]).combat
