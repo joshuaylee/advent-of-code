@@ -1,7 +1,7 @@
 require_relative 'battle'
 
 safe_power = nil
-elf_power = 0
+elf_power = 3
 
 until_elf_dies = Proc.new do |full_round, board|
   any_elf_deaths = board.units.any? { |unit| unit.elf? && !unit.alive? }
