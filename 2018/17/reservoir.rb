@@ -5,6 +5,7 @@ WATER_LIMIT = (ARGV[1] || 50000).to_i
 
 @waterfalls = Set.new
 @water_locations = Set.new
+@water_stable = Set.new
 @clay_locations = Set.new
 
 def load_clay_locations(file)
@@ -52,6 +53,10 @@ def water_reaches(x, y)
   @water_locations.add([x, y])
 end
 
+def mark_water_stable(x1, x2, y)
+  (x1..x2).each { |x| @water_stable.add([x, y]) }
+end
+
 def flow_down(x, y)
   return if waterfall?(x, y)
   @waterfalls.add([x, y])
@@ -72,11 +77,12 @@ def fill_up(x, y)
     rx, right = flow_horiz(x, y, 1)
 
     if left == :clay && right == :clay
+      mark_water_stable(lx+1, rx-1, y)
       y -= 1
     else
       flow_down(lx, y) if left == :gravity
       flow_down(rx, y) if right == :gravity
-      break if !contained?(x, y)
+      break unless check_contained(x, y)
       y -= 1
     end
   end
@@ -100,34 +106,21 @@ def flow_horiz(x, y, delta)
   [x, stop_reason]
 end
 
-def contained?(x, y)
-  orig_x = x
-
-  left = while water?(x, y)
-    x -= 1
-    break true if clay?(x, y)
+def check_contained(x, y)
+  check_clay = lambda do |x, y, delta|
+    while water?(x, y)
+      x += delta
+      break x if clay?(x, y)
+    end
   end
 
-  x = orig_x
+  left = check_clay.call(x, y, -1)
+  right = check_clay.call(x, y, 1)
 
-  right = while water?(x, y)
-    x += 1
-    break true if clay?(x, y)
+  if left && right
+    mark_water_stable(left+1, right-1, y)
+    true
   end
-
-  left && right
-end
-
-def part1
-  load_clay_locations(INPUT_FILE)
-  flow_down(500, 0)
-
-  min_depth = @clay_locations.min_by(&:last).last
-  water_count = @water_locations.count { |(_x, y)| y >= min_depth && y <= max_depth }
-
-  puts "min_depth = #{min_depth}"
-  puts "max_depth = #{max_depth}"
-  puts "The total number of tiles the water can reach is #{water_count}"
 end
 
 def write_svg
@@ -168,5 +161,13 @@ def write_svg
   `open #{svg_name}`
 end
 
-part1
+load_clay_locations(INPUT_FILE)
+flow_down(500, 0)
+
+min_depth = @clay_locations.min_by(&:last).last
+water_count = @water_locations.count { |(_x, y)| y >= min_depth && y <= max_depth }
+
+puts "The total number of tiles the water can reach is #{water_count}"
+puts "Stable water count: #{@water_stable.size}"
+
 write_svg
