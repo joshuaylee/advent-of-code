@@ -1,9 +1,11 @@
+require 'set'
+
 LUMBERYARD = "#"
 TREES = "|"
 OPEN = "."
 
-def load_initial_state
-  File.open(ARGV[0]).read.split("\n").map(&:chars)
+def load_initial_state(file)
+  File.open(file).read.split("\n").map(&:chars)
 end
 
 def get_at(state, x, y)
@@ -58,13 +60,33 @@ def viz(state)
   puts state.map(&:join)
 end
 
-state = load_initial_state
-10.times do |i|
-  puts i
-  state = tick(state)
-  viz(state)
+def state_str(state)
+  state.map(&:join).join
+end
+
+state = load_initial_state(ARGV[0])
+memo = {}
+goal = ARGV[1].to_i
+tick = 0
+while tick < goal
+  if !memo.key?(state)
+    memo[state] = tick
+    state = tick(state)
+    tick += 1
+  else
+    last_tick = memo[state]
+    jump = tick - last_tick
+    num_jumps = (goal - tick) / jump
+
+    if num_jumps > 0
+      tick += num_jumps * jump
+    else
+      state = tick(state)
+      tick += 1
+    end
+  end
 end
 
 lumberyards = state.flatten.count { |ch| ch == LUMBERYARD }
 trees = state.flatten.count { |ch| ch == TREES }
-puts "After 10 minutes there are #{trees} wooded acres and #{lumberyards} lumberyards, giving a resource value of #{lumberyards * trees}"
+puts "After #{goal} minutes there are #{trees} wooded acres and #{lumberyards} lumberyards, giving a resource value of #{lumberyards * trees}"
