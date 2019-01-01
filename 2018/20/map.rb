@@ -21,6 +21,7 @@ class Mapper
   private
 
   attr_reader :rooms, :full_regex
+
   def map_recursive(start_room, regex, debug=false)
     @memo ||= {}
     @memo[start_room.id + regex] ||= begin
@@ -143,8 +144,6 @@ class DistanceCalculator
 
     distances
   end
-
-  private
 end
 
 def part1
