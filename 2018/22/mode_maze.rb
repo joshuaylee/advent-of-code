@@ -4,6 +4,7 @@ DEPTH = ARGV[0].to_i
 TARGET_X = ARGV[1].to_i
 TARGET_Y = ARGV[2].to_i
 EROSION_CONST = 20183
+PADDING = (ARGV[3] || 0).to_i
 
 ROCKY = 0
 WET = 1
@@ -12,11 +13,14 @@ NARROW = 2
 def erosion_map
   map = []
 
-  (0..TARGET_Y).each do |y|
-    row = Array.new(TARGET_X + 1)
+  width = TARGET_X + PADDING
+  length = TARGET_Y + PADDING
+
+  (0..length).each do |y|
+    row = Array.new(width)
     map.push(row)
 
-    (0..TARGET_X).each do |x|
+    (0..width).each do |x|
       geo_index = if y == 0
                     geo_index = x * 16807
                   elsif x == 0
@@ -67,8 +71,8 @@ def part1
 
   viz(map)
 
-  risk = map.reduce(0) do |sum, row|
-    sum + row.reduce(0) do |sum, region|
+  risk = map.slice(0..TARGET_Y).reduce(0) do |sum, row|
+    sum + row.slice(0..TARGET_X).reduce(0) do |sum, region|
       sum + risk(region)
     end
   end
