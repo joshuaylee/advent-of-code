@@ -1,0 +1,15 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    priority_queue_cxx (0.3.4)
+    shortest_path (0.0.5)
+      priority_queue_cxx
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  shortest_path
+
+BUNDLED WITH
+   1.16.3
